@@ -1,0 +1,393 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link rel="stylesheet" href="scripts/jquery.mobile-1.4.5.min.css" />
+<script src="scripts/jquery-1.11.1.min.js"></script>
+<script src="scripts/jquery.mobile-1.4.5.min.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/jquery/dist/jquery.min.js?rev=2f6b11a7e914718e0290410e85366fe9"></script>
+<script src="https://blocklypro.webduino.io/dist/lib/webduino-all-0.4.20.min.js?rev=4426739c00d85325cb2d3d701fa50666"></script>
+<script src="https://blocklypro.webduino.io/dist/webduino-blockly.min.js?rev=6e074ceb23d12d1f7cf2ec95cd5a4150"></script>
+<script src="https://blocklypro.webduino.io/dist/lib/firebase.min.js?rev=c0bfd493efd477d098a4ae9e92b13880"></script>
+<script src="https://blocklypro.webduino.io/dist/lib/runtime.min.js?rev=683a69503433786202911b4d9f766100"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-lcd1602/LCD1602.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-lcd1602/LCD1602-blockly.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-dht/Dht.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-dht/Dht-blockly.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-pm25/G3.js"></script>
+<script src="https://blocklypro.webduino.io/node_modules/webduino-module-pm25/G3-blockly.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>無標題文件</title>
+<style>
+a {
+	text-decoration:none;	
+}
+body{
+	font-family:"微軟正黑體";
+	background-color: #E5E2E3
+}
+	
+	#clock {
+		position: absolute;
+		margin:5%,0%,0%,0%;
+		width: 95%;
+		height: 100px;
+		background-color:#E5BA97;
+		border-radius: 12px;
+	}
+	
+	#mainButton{
+		position:absolute;
+		top:190px;
+		width: 100%;
+		
+	}
+
+	td {
+		vertical-align: middle;
+	}
+
+#airalter {
+	color:#F30;
+	}
+
+#light1 img {
+height: 160px;
+width: 160px;
+	display:none;
+	pointer-events: auto!important;
+}
+
+#light2 img {
+height: 160px;
+width: 160px;
+	display: none;
+	pointer-events: auto!important;
+}
+
+#moist img {
+height: 160px;
+width: 160px;
+	display: none;
+	pointer-events: auto!important;
+}
+	
+#light1.on #demo-area-01-on {
+display: inline-block;
+pointer-events: auto!important;
+}
+#light1.off #demo-area-01-off {
+display: inline-block;
+pointer-events: auto!important;
+}
+#light2.on #demo-area-02-on {
+display: inline-block;
+pointer-events: auto!important;
+}
+#light2.off #demo-area-02-off {
+display: inline-block;
+pointer-events: auto!important;
+}
+
+#moist.on #demo-area-03-on {
+display: inline-block;
+pointer-events: auto!important;
+}
+#moist.off #demo-area-03-off {
+display: inline-block;
+pointer-events: auto!important;
+}
+
+#div_light {
+	height: 160px;
+	width: 160px;
+	background-color:beige;
+	border-radius: 20px;
+	pointer-events: auto!important;
+}
+#div_temp, #div_pm25 { 
+	height: 160px;
+	width: 160px;
+	background-color:beige;
+	border-radius: 20px;
+	}
+
+	#temp, #pm25 {
+		font-size: 30px;
+	}
+	
+	hr {
+		height: 2px;
+		background-color: #000;
+		
+	}
+</style>
+
+
+</head>
+
+<body>
+<script type="text/javascript">
+(async function () {
+//now clock
+window.onload=function(){
+setInterval(function(){
+var day_list = ['日', '一', '二', '三', '四', '五', '六'];
+var date=new Date();
+var year=date.getFullYear(); //獲取當前年份
+var mon=date.getMonth()+1; //獲取當前月份
+var da=date.getDate(); //獲取當前日
+var day=date.getDay(); //獲取當前星期幾
+var h=date.getHours(); //獲取小時
+var m=date.getMinutes(); //獲取分鐘
+var s=date.getSeconds(); //獲取秒
+if (h < 10){ h = '0' + h }
+if (m < 10){ m = '0' + m }
+if (s < 10){ s = '0' + s }
+var d=document.getElementById('Date');
+d.innerHTML= year+'年'+mon+'月'+da+'日'+'星期'+day_list[day]+'<br>'+h+'時'+m+'分'+s+'秒'; },1000) }
+
+//openLight
+var rgbled;
+var Oled;
+
+//temp
+var dht;
+
+//k1602aLCD Clock
+var lcd1602;
+var nowMinute;
+
+//PM2.5
+var g3;
+	
+//Random_Light
+var rgbled;
+var colorchange;
+	
+//moist switch
+var relay;
+var relayval;
+
+function colour_random() {
+  var num = Math.floor(Math.random() * Math.pow(2, 24));
+  return '#' + ('00000' + num.toString(16)).substr(-6);
+}
+
+function get_time(t) {
+  var varTime = new Date(),
+    varHours = varTime.getHours(),
+    varMinutes = varTime.getMinutes(),
+    varSeconds = varTime.getSeconds();
+  var varNow;
+  if (t == "hms") {
+    varNow = varHours + ":" + varMinutes + ":" + varSeconds;
+  } else if (t == "h") {
+    varNow = varHours;
+  } else if (t == "m") {
+    varNow = varMinutes;
+  } else if (t == "s") {
+    varNow = varSeconds;
+  }
+  return varNow;
+}
+
+function get_date(t) {
+  var varDay = new Date(),
+    varYear = varDay.getFullYear(),
+    varMonth = varDay.getMonth() + 1,
+    varDate = varDay.getDate();
+  var varNow;
+  if (t == "ymd") {
+    varNow = varYear + "/" + varMonth + "/" + varDate;
+  } else if (t == "mdy") {
+    varNow = varMonth + "/" + varDate + "/" + varYear;
+  } else if (t == "dmy") {
+    varNow = varDate + "/" + varMonth + "/" + varYear;
+  } else if (t == "y") {
+    varNow = varYear;
+  } else if (t == "m") {
+    varNow = varMonth;
+  } else if (t == "d") {
+    varNow = varDate;
+  }
+  return varNow;
+}
+
+  //PM2.5
+boardReady({board: 'Smart', device: 'BJN7N', transport: 'mqtt'}, function (board) {
+  board.samplingInterval = 250;
+	g3 = getG3(board, 12, 3);
+	  g3.read(function (val) {
+		document.getElementById('pm25').innerHTML = (['空氣品質<hr>','PM2.5:',g3.pm25,'<br>PM1.0:',g3.pm10].join(''));
+		if (g3.pm25 >= 25 || g3.pm10 >= 20) {
+			document.getElementById('airalter').style.fontSize = 24 + 'px';
+      		document.getElementById('airalter').innerHTML = (['目前空氣品質不佳建議使用能淨化空氣的精油( ･ิω･ิ)'].join(''));
+    }
+	  }, 1500);
+ }); 
+
+
+boardReady({device: 'GjLLa'}, async function (board) {
+  board.samplingInterval = 250;
+  
+  //Lcd Show Time
+  lcd1602 = getLCD1602(board,13,12,0x27);
+  if (get_time("m") < 10) {
+    nowMinute = String('0') + String(get_time("m"));
+  } else {
+    nowMinute = String(get_time("m"));
+  }
+  lcd1602.cursor(0, 0);
+  lcd1602.print((get_date("ymd")));
+  lcd1602.print(([String('|') + String(get_time("h")),':',nowMinute].join('')));
+  setInterval(function () {
+    lcd1602.clear();
+    lcd1602.cursor(0, 0);
+    lcd1602.print((get_date("ymd")));
+    lcd1602.print(([String('|') + String(get_time("h")),':',nowMinute].join('')));
+  }, 1000 * 60);
+
+  //led Light
+  rgbled = getRGBLed(board, 5, 6, 7);
+  Oled = false;
+  document.getElementById('light1').addEventListener('click', function () {
+    if (document.getElementById('light1').className == 'on') {
+       document.getElementById('light1').className = 'off';
+    } else {
+      document.getElementById('light1').className = 'on';
+    }
+    Oled = !Oled;
+    if (Oled) {
+      rgbled.setColor('#33ccff');
+    } else {
+      rgbled.setColor('#000000');
+    }
+  });
+
+  colorchange = false;
+  document.getElementById('light2').addEventListener('click', async function () {
+    colorchange = !colorchange;
+    if (document.getElementById('light2').className == 'on') {
+       document.getElementById('light2').className = 'off';
+    } else {
+      document.getElementById('light2').className = 'on';
+    }
+    while (colorchange) {
+      rgbled.setColor(colour_random());
+      await delay(1);
+    }
+    if (!colorchange) {
+      rgbled.setColor('#000000');
+    }
+  });
+
+
+	
+  //moist switch
+  relay = getRelay(board, 8);
+  relay.off();
+  relayval = 0;
+  document.getElementById('moist').addEventListener('click', function () {
+    if (document.getElementById('moist').className == 'on') {
+       document.getElementById('moist').className = 'off';
+    } else {
+      document.getElementById('moist').className = 'on';
+    }
+    if (relayval == 0) {
+      relayval = 1;
+      relay.on();
+    } else {
+      relayval = 0;
+      relay.off();
+    }
+  });
+
+  //other
+	
+	
+});
+
+}());
+	
+//temp
+boardReady({board: 'Smart', device: 'EXRQx', transport: 'mqtt'}, function (board) {
+  board.samplingInterval = 50;
+   dht = getDht(board, 4);
+  dht.read(function(evt){
+    document.getElementById('temp').innerHTML = (['溫溼度<hr>',dht.temperature,'度<br>',dht.humidity,'%<br>'].join(''));
+  }, 1000);
+});
+
+</script>
+	
+	
+<div data-role="page" id="home">
+<div data-role="header"><h2>智能香氛燈</h2></div> <!--APP標題-->
+<div role="main" class="ui-content"> <!--APP內容，將資料內容放在<center></center>裡面-->
+<center>
+<div id="clock"><div id="Date" style="font-size:30px"></div></div>
+
+
+<div id="mainButton">
+<table border="0" width="95%" align="left">
+	<tr><td colspan="2"><marquee scrollamount="10" id="airalter"><font size="+2">空氣品質良好</font></marquee></td></tr>
+	<tr><td align="center">
+		<div id="div_light">
+		<div id="light1" class="off">
+      		<img src="./img/lightoff.png" id="demo-area-01-off" width="60">
+      		<img src="./img/lighton.png" id="demo-area-01-on" width="60">
+    	</div>
+			</div>
+		</td>
+		<td align="center">
+		<div id="div_temp"><span id="temp">READING DATA</span></div>
+		</td>
+    </tr>
+    
+	<tr><td align="center">
+		<div id="div_light">
+		<div id="light2" class="off">
+      		<img src="./img/coloroff.png" id="demo-area-02-off" width="60">
+      		<img src="./img/coloron.png" id="demo-area-02-on" width="60">
+    	</div>
+		</div>
+		</td>
+		<td align="center"><div id="div_pm25"><span id="pm25">READING DATA</span></div></td>
+    </tr>
+ 
+	<tr>
+		<td align="center">
+		<div id="div_light">
+		<div id="moist" class="off">
+      		<img src="./img/moistoff.png" id="demo-area-03-off" width="60">
+      		<img src="./img/moiston.png" id="demo-area-03-on" width="60">
+    	</div>
+		</div>
+		</td><td align="center">
+		<div id="div_light">
+      		<a href="mp3.html" target="_top"><img src="./img/music.png" width="100%"></a>
+    	</div>
+		</td>
+    </tr>
+ 
+</table>
+</div>
+
+	
+	
+<!--<button class="ui-btn ui-corner-all ui-btn-icon-left ui-icon-cloud">Button</button>--></div>
+
+<div data-role="footer" data-position="fixed"> <!--APP底部按鈕-->
+	<div data-role="navbar" class="ui-body-c">
+		<ul>
+            <li><a href="copyright.html" data-icon="info">COPYRIGHT</a></li>
+			<li><a href="index.html" data-icon="home">HOME</a></li>
+			<li><a href="about.html" data-icon="user">ABOUT</a></li>
+		</ul>
+	</div>
+</div>  
+</div>
+</div>
+</body>
+</html>

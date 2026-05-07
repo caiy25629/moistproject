@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.hcvs.asky.kaohsiungfun" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Fun!高雄旅遊趣</name>
+    <description>
+        使用高雄市開放資料平台，以獲取最新的觀光、旅遊、美食、住宿及交通資訊。
+    </description>
+    <author email="asky@hcvs.kh.edu.tw" href="http://163.32.98.41/asky/boy">
+        高雄市立海青工商職校　李保宜老師。
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <plugin name="cordova-plugin-whitelist" spec="1" />
+    <plugin name="cordova-plugin-geolocation" spec="~2.4.0" />
+	<plugin name="cordova-plugin-device" />
+    <allow-navigation href="*" />
+	<icon src="icon-114x114.png" width="114" height="114" />
+	<splash src="Default-667h@2x.png" platform="ios" width="750" height="1334" />
+	<splash src="splash.jpg" platform="winphone" width="640" height="960" />
+</widget>
